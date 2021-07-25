@@ -20,23 +20,25 @@ namespace Ordering.API.Extensions
             {
                 var services = scope.ServiceProvider;
                 var logger = services.GetRequiredService<ILogger<TContext>>();
-                var context = services.GetService<TContext>();
-                try
+                using(var context = services.GetRequiredService<TContext>())
                 {
-                    logger.LogInformation("Migrating database associated with context {DbContextName}", typeof(TContext).Name);
-                    InvokeSeeder(seeder, context, services);
-                    logger.LogInformation("Migrated database associated with context {DbContextName}", typeof(TContext).Name);
-                }
-                catch(SqlException ex)
-                {
-                    logger.LogError(ex, "An error occurred while migrating the database used on context {DbContextName}", typeof(TContext).Name);
-                    if (retryForAvailability < 50)
+                    try
                     {
-                        retryForAvailability++;
-                        Thread.Sleep(2000);
-                        MigrateDatabase<TContext>(host, seeder, retryForAvailability);
-                    }                    
-                }
+                        logger.LogInformation("Migrating database associated with context {DbContextName}", typeof(TContext).Name);
+                        InvokeSeeder(seeder, context, services);
+                        logger.LogInformation("Migrated database associated with context {DbContextName}", typeof(TContext).Name);
+                    }
+                    catch (SqlException ex)
+                    {
+                        logger.LogError(ex, "An error occurred while migrating the database used on context {DbContextName}", typeof(TContext).Name);
+                        if (retryForAvailability < 50)
+                        {
+                            retryForAvailability++;
+                            Thread.Sleep(2000);
+                            MigrateDatabase<TContext>(host, seeder, retryForAvailability);
+                        }
+                    }
+                }                
             }
             return host;
         }

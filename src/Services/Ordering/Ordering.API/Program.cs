@@ -10,16 +10,16 @@ namespace Ordering.API
 {
     public class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
         {
-            await CreateHostBuilder(args)
+            CreateHostBuilder(args)
                .Build()
                .MigrateDatabase<OrderContext>(async (context, services) =>
                {
                    var logger = services.GetService<ILogger<OrderContextSeed>>();
-                   await OrderContextSeed.SeedAsync(context, logger);
+                   OrderContextSeed.SeedAsync(context, logger).Wait();
                })
-               .RunAsync();
+               .Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
